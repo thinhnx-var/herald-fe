@@ -1,4 +1,6 @@
 import { useTradeForm } from "@/hooks/useTradeForm";
+import { useWallet } from "@/hooks/useWallet";
+import Button from "@/components/ui/Button";
 import DepositAmountInput from "./DepositAmountInput";
 import DepositTokenSelect from "./DepositTokenSelect";
 import DirectionTabs from "./DirectionTabs";
@@ -7,6 +9,7 @@ import PositionSummary from "./PositionSummary";
 import SubmitButton from "./SubmitButton";
 
 export default function TradePanel() {
+	const { isConnected, connect } = useWallet();
 	const {
 		depositToken,
 		setDepositToken,
@@ -41,13 +44,24 @@ export default function TradePanel() {
 					direction={direction}
 				/>
 
-				<SubmitButton
-					direction={direction}
-					disabled={!isValid}
-					onClick={() => {
-						// TODO: Implement contract interaction
-					}}
-				/>
+				{isConnected ? (
+					<SubmitButton
+						direction={direction}
+						disabled={!isValid}
+						onClick={() => {
+							// TODO: Implement contract interaction
+						}}
+					/>
+				) : (
+					<Button
+						variant="primary"
+						size="lg"
+						className="w-full"
+						onClick={connect}
+					>
+						Connect Wallet
+					</Button>
+				)}
 
 				<div className="border-t border-(--border) pt-3">
 					<PositionSummary data={summary} />
