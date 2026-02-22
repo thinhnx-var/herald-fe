@@ -1,18 +1,19 @@
+import { usePriceData } from "@/hooks/usePriceData";
 import { useTradingStore } from "@/stores/tradingStore";
 import { cn } from "@/utils/cn";
 import { formatPrice } from "@/utils/format";
 
 export default function PriceInfoBar() {
 	const { selectedPair } = useTradingStore();
+	const { data: priceData, isLoading } = usePriceData();
 
-	// TODO: Replace with real price data from usePriceStream hook
-	const priceData = {
-		price: 0.08145,
-		change24h: -10,
-		high24h: 0.0947,
-		low24h: 0.08001,
-		volume24h: 12.035,
-	};
+	if (isLoading || !priceData) {
+		return (
+			<div className="flex items-center gap-6 text-sm text-(--text-secondary)">
+				Loading price...
+			</div>
+		);
+	}
 
 	const isNegative = priceData.change24h < 0;
 
@@ -34,7 +35,7 @@ export default function PriceInfoBar() {
 					)}
 				>
 					{isNegative ? "" : "+"}
-					{priceData.change24h}%
+					{priceData.change24h.toFixed(2)}%
 				</span>
 			</div>
 

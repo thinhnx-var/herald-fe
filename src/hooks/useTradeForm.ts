@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { FEES, TOKENS } from "@/constants";
+import { usePriceData } from "@/hooks/usePriceData";
+import { useTradingStore } from "@/stores/tradingStore";
 import type { PositionSummaryData, Token, TradeDirection } from "@/types";
 import {
 	calculateFees,
@@ -9,14 +11,16 @@ import {
 } from "@/utils/math";
 
 export function useTradeForm() {
+	const { selectedPair } = useTradingStore();
+	const { data: priceData } = usePriceData();
+
 	const [depositToken, setDepositToken] = useState<Token>(TOKENS.USDC);
 	const [depositAmount, setDepositAmount] = useState("");
 	const [leverage, setLeverage] = useState(5);
 	const [direction, setDirection] = useState<TradeDirection>("long");
 
-	// TODO: Replace with real price from usePriceStream
-	const entryPrice = 0.1023;
-	const baseTokenSymbol = "HBAR";
+	const entryPrice = priceData?.price ?? 0;
+	const baseTokenSymbol = selectedPair.baseToken.symbol;
 
 	const amount = Number.parseFloat(depositAmount) || 0;
 	const positionSize = calculatePositionSize(amount, leverage);
