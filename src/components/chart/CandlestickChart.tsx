@@ -8,36 +8,14 @@ import {
 import { useEffect, useRef } from "react";
 import type { Candle } from "@/types";
 
-// Sample data for initial rendering
-const SAMPLE_CANDLES: Candle[] = generateSampleCandles();
-
-function generateSampleCandles(): Candle[] {
-	const candles: Candle[] = [];
-	let price = 0.1;
-	const now = Math.floor(Date.now() / 1000);
-	const interval = 3600; // 1h candles
-
-	for (let i = 200; i >= 0; i--) {
-		const time = now - i * interval;
-		const open = price;
-		const change = (Math.random() - 0.48) * 0.01;
-		const close = price + change;
-		const high = Math.max(open, close) + Math.random() * 0.005;
-		const low = Math.min(open, close) - Math.random() * 0.005;
-		const volume = Math.floor(Math.random() * 20000 + 1000);
-
-		candles.push({ time, open, high, low, close, volume });
-		price = close;
-	}
-	return candles;
-}
-
 interface CandlestickChartProps {
-	candles?: Candle[];
+	candles: Candle[];
+	lastCandle?: Candle;
 }
 
 export default function CandlestickChart({
-	candles = SAMPLE_CANDLES,
+	candles,
+	lastCandle,
 }: CandlestickChartProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const chartRef = useRef<IChartApi | null>(null);
@@ -95,7 +73,6 @@ export default function CandlestickChart({
 		candleSeriesRef.current = candleSeries;
 		volumeSeriesRef.current = volumeSeries;
 
-		// ResizeObserver for responsive chart
 		const resizeObserver = new ResizeObserver((entries) => {
 			for (const entry of entries) {
 				const { width, height } = entry.contentRect;
@@ -133,6 +110,25 @@ export default function CandlestickChart({
 		candleSeriesRef.current.setData(candleData);
 		volumeSeriesRef.current.setData(volumeData);
 	}, [candles]);
+
+	useEffect(() => {
+		if (!lastCandle || !candleSeriesRef.current || !volumeSeriesRef.current)
+			return;
+
+		candleSeriesRef.current.update({
+			time: lastCandle.time as UTCTimestamp,
+			open: lastCandle.open,
+			high: lastCandle.high,
+			low: lastCandle.low,
+			close: lastCandle.close,
+		});
+
+		volumeSeriesRef.current.update({
+			time: lastCandle.time as UTCTimestamp,
+			value: lastCandle.volume,
+			color: lastCandle.close >= lastCandle.open ? "#26a69a40" : "#ef535040",
+		});
+	}, [lastCandle]);
 
 	return <div ref={containerRef} className="w-full h-full min-h-75" />;
 }
